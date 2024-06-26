@@ -1,5 +1,9 @@
 ﻿#コメントアウトしたい箇所のソースを選択状態にして、[Ctrl]+[k] →[c]を押します
 #コメント解除したい箇所のソースを選択状態にして、[Ctrl]+[k] →[u]を押します
+#CHANGED ヘッダーの要素数が異なっていたので，それぞれ対応する番号に書き換えている
+#CHANGED Original : time, ID,前方位置(position?),後方位置,道路ID,車線,speed,加速度,車間,相対速度,,,,,etc
+#CHANGED SUMO : time, ID, position, speed
+#CHANGED つまり要素番号 time:変更なし ID:変更なし positon:変更なし speed:6->3
 
 #==========================Python 3.9で動作確認済み=============================================
 #==========================R6個の場合、車両1台あたり平均2秒でcsvに書き出せる=============================================
@@ -105,7 +109,8 @@ def make_data(csv_name):
     #読み込んだcsvのデータを保持する配列（生データ）
     data = []
 
-    with open(file_pass, 'r', encoding="utf-16", errors="", newline="") as f:
+    #CHANGED エンコード utf-8
+    with open(file_pass, 'r', encoding="utf-8", errors="", newline="") as f:
         #リスト形式
         csv_data1 = csv.reader(f, delimiter=",", doublequote=True, lineterminator="\r\n", quotechar='"', skipinitialspace=True)
 
@@ -115,23 +120,23 @@ def make_data(csv_name):
         data_append = data.append
         for i in csv_data1:  # 各行がリストになっている
             data_append(i)
-            #print(i)
 
     #========ここまでcsvのデータ作成================================================
 
     #========ここから台数と車両IDの最大値を得る============================================
-    carID_max = -1   #最大車両ID用変数の初期化 #NOTE この変数使ってないみたい
+    carID_max = -1   #最大車両ID用変数の初期化 #? この変数使ってないみたい
     car_list = [[0] *1  for i in range(0)]
     car_list_append = car_list.append
+    
     #for i in range(1,len(data)):    #全行の中からIDの最大値を探索
     #    if int(data[i][1]) > carID_max:
     #        carID_max = int(data[i][1])
     #        car_list_append(data[i][1])
+    #CHANGED IDが文字列なので，辞書型で扱う
     car_list= [row[1] for row in data]
-    c = set(collections.Counter(car_list))
-    c.discard('vehicle_ID')
+    c = set(collections.Counter(car_list)) #重複を削除,IDリストになる
+    c.discard('ID') #ヘッダーも含まれてしまうので削除
     car_num= len(c) #車の台数
-    #print("全車両台数: ",car_num)
     #========ここまで台数と車両IDの最大値を得る============================================
 
     #===================ここから車両IDを0から順に辞書型に登録する=======================
@@ -146,12 +151,13 @@ def make_data(csv_name):
     #carData = np.zeros((carID_max,1,21))
     #IDは0も存在し、0から数えているので配列数は+1必要
     #carData  = [[[0] * 21 for i in range(0)] for j in range(car_num)]#車の台数分用意
-    #NOTE IDはStrなので辞書型にしなければならない
     carData={}
-    timeData = [[[0] * 21 for i in range(0)] for j in range(int(float(data[-1][0]))-int(float(data[1][0]))+1)]#記録されてる時間分用意
+    #記録されてる時間分用意　#*最初の記録と最後の記録の時間差をとっている
+    timeData = [[[0] * 21 for i in range(0)] for j in range(int(float(data[-1][0]))-int(float(data[1][0]))+1)]
     #=========ここから車両ID別データに分類========================================================
     for k in range(1,len(data)):#ヘッダーは除外してインクリメント
         #車両IDを見て、対応する配列に一行ずつ丸々追加
+        #CHANGED IDは文字列なので辞書型で扱う
         carData.setdefault(data[k][1], []).append(data[k])
     #=========ここまで車両ID別データに分類========================================================
 
@@ -175,8 +181,9 @@ def make_data(csv_name):
     ID          ={key: [] for key in c}
     position    ={key: [] for key in c}
     car_speed   ={key: [] for key in c}
-    car_Type    ={key: [0] for key in c}
+    car_Type    ={key: [0] for key in c} #CHANGED どうせ全部0
     avr_speed   ={key: [[[0] * 1 for i in range(0)] for j in range(R_total_num)] for key in c}
+    
     #===========ここから出力したい車両の分だけ計算させるためにIDだけ先に記録======================================================================-
     #for A in c:#車両IDインクリメント
     #    carID = A
@@ -251,7 +258,7 @@ def make_data(csv_name):
             time_array_append(carData[carID][k][0])       #時間の列作成
             ID_array_append(carData[carID][k][1])         #IDの列作成。代入の値はcarIDそのものでもいいかも（処理速度的に）。
             position_array_append(carData[carID][k][2])   #車両位置（前方位置）の列作成
-            car_speed_array_append(carData[carID][k][3])  #速度の列作成 #NOTE多分ここ変更ポイント
+            car_speed_array_append(carData[carID][k][3])  #速度の列作成
             #car_Type[carID].append(carData[carID][k][17])  #車両Typeの列作成。0=手動,1=閾値を下回ってから自動運転,2=予測結果が閾値を下回ってから自動運転
 
             for n in range(R_total_num):
