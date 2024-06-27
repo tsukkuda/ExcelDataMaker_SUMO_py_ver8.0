@@ -120,23 +120,16 @@ def make_data(csv_name):
         data_append = data.append
         for i in csv_data1:  # 各行がリストになっている
             data_append(i)
+            #print(i)
 
     #========ここまでcsvのデータ作成================================================
 
     #========ここから台数と車両IDの最大値を得る============================================
-    carID_max = -1   #最大車両ID用変数の初期化 #? この変数使ってないみたい
-    car_list = [[0] *1  for i in range(0)]
-    car_list_append = car_list.append
-    
-    #for i in range(1,len(data)):    #全行の中からIDの最大値を探索
-    #    if int(data[i][1]) > carID_max:
-    #        carID_max = int(data[i][1])
-    #        car_list_append(data[i][1])
-    #CHANGED IDが文字列なので，辞書型で扱う
     car_list= [row[1] for row in data]
+    car_list.remove('ID') #ヘッダーも含まれてしまうので削除
     c = set(collections.Counter(car_list)) #重複を削除,IDリストになる
-    c.discard('ID') #ヘッダーも含まれてしまうので削除
     car_num= len(c) #車の台数
+    #print("全車両台数: ",car_num)
     #========ここまで台数と車両IDの最大値を得る============================================
 
     #===================ここから車両IDを0から順に辞書型に登録する=======================
@@ -150,15 +143,15 @@ def make_data(csv_name):
     #numpy配列verは扱い方がわからないから保留
     #carData = np.zeros((carID_max,1,21))
     #IDは0も存在し、0から数えているので配列数は+1必要
-    #carData  = [[[0] * 21 for i in range(0)] for j in range(car_num)]#車の台数分用意
-    carData={}
-    #記録されてる時間分用意　#*最初の記録と最後の記録の時間差をとっている
-    timeData = [[[0] * 21 for i in range(0)] for j in range(int(float(data[-1][0]))-int(float(data[1][0]))+1)]
+    carData  = {}
+    #記録されてる時間分用意 #*最初の記録と最後の記録の時間差をとっている
+    timeData = [[[0] * 21 for i in range(0)] for j in range(int(float(data[len(data)-1][0]))-int(float(data[1][0]))+1)]
+
     #=========ここから車両ID別データに分類========================================================
-    for k in range(1,len(data)):#ヘッダーは除外してインクリメント
+    for i in range(1,len(data)):#ヘッダーは除外してインクリメント
         #車両IDを見て、対応する配列に一行ずつ丸々追加
-        #CHANGED IDは文字列なので辞書型で扱う
-        carData.setdefault(data[k][1], []).append(data[k])
+        #CHANGED IDは辞書型で扱う
+        carData.setdefault(data[i][1], []).append(data[i])
     #=========ここまで車両ID別データに分類========================================================
 
     #=========ここから時間別データに分類========================================================
@@ -167,30 +160,22 @@ def make_data(csv_name):
         timeData[int(float(data[i][0]))-int(float(data[1][0]))].append(data[i])
     #=========ここまで時間別データに分類========================================================
 
+
     #=========ここから予測に使うcsv用にデータを編集・形成。自動手動関係なくとりあえず全部加工。自動か手動のラベルは残しておく===================================
+
     #車両IDごとに必要データをすべて先に生成する。全部そろってからIDを指定してcsvファイルに書き出していく。
     #変数を宣言
     #配列は台数分用意
-    #time        =[[[0] * 1 for i in range(0)] for j in range(car_num)]
-    #ID          =[[[0] * 1 for i in range(0)] for j in range(car_num)]
-    #position    =[[[0] * 1 for i in range(0)] for j in range(car_num)]
-    #car_speed   =[[[0] * 1 for i in range(0)] for j in range(car_num)]
-    #car_Type    =[[[0] * 1 for i in range(0)] for j in range(car_num)]
-    #avr_speed   =[[[[0] * 1 for i in range(0)] for j in range(R_total_num)] for j in range(car_num)]
     time        ={key: [] for key in c}
     ID          ={key: [] for key in c}
     position    ={key: [] for key in c}
     car_speed   ={key: [] for key in c}
-    car_Type    ={key: [0] for key in c} #CHANGED どうせ全部0
     avr_speed   ={key: [[[0] * 1 for i in range(0)] for j in range(R_total_num)] for key in c}
-    
+
     #===========ここから出力したい車両の分だけ計算させるためにIDだけ先に記録======================================================================-
-    #for A in c:#車両IDインクリメント
-    #    carID = A
-    #    for k in range(len(carData[carID])):    #その車両IDのデータの行数分インクリメント
-    #        car_Type[carID].append([0])  #車両Typeの列作成。0=手動,1=閾値を下回ってから自動運転,2=予測結果が閾値を下回ってから自動運転
+    car_Type    ={key: [0] for key in c} #CHANGED どうせ全部0
     #===========ここまで出力したい車両の分だけ計算させるためにIDだけ先に記録======================================================================-
-    
+
     #===========ここから車両Type別に台数をカウント=========================================
     #変数の初期化
     car_Type0 = 0
@@ -231,6 +216,7 @@ def make_data(csv_name):
     #print("車両Type0: ",car_Type0,"  車両Type1: ",car_Type1,"  車両Type2: ",car_Type2,"  車両Type3: ",car_Type3,"  車両Type不明: ",car_TypeX,"    合計: ",car_Type_sum)
     #print()
     #print()
+
 
 
     #出力数をカウントする変数
