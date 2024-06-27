@@ -43,7 +43,7 @@ def make_data(csv_name):
         #R1の基準点はその時の[速度(秒速)×10s]先の位置。そこから前後に100m(任意)がR1の範囲
         ave_speed   = 0
         R_range     = R_RANGE                       #Rの範囲を指定。ページ最上部で設定可能
-        R_point     = Decimal(str(float(carData[carID][k][2]))) + Decimal(str(float(carData[carID][k][3]))) * 15     #Rの基準点を計算
+        R_point     = Decimal(str(float(carData[carID][k][2]))) + Decimal(str(float(carData[carID][k][6]))) * 15     #Rの基準点を計算
         R_start     = R_point-(R_range*R_num)               #Rの範囲の始まり
         R_goal  = R_point + (R_range*R_num)               #Rの範囲の終わり
         if R_start < 0:         #R_startが0より小さければ0に変更。ex.)R_s = -0.7,R_g = 199.7をR_s = 0.0,R_g = 200.0にする。
@@ -71,7 +71,7 @@ def make_data(csv_name):
                 if int(0) == Type_num and R_start <= Decimal(str(timeData[int(float(carData[carID][k][0])) - int(float(data[1][0]))][i][2])) and Decimal(str(timeData[int(float(carData[carID][k][0])) - int(float(data[1][0]))][i][2])) <= R_goal:  #車両がRの範囲内にあるか判別
                     if ave_flag == 0 and timeData[int(float(carData[carID][k][0])) - int(float(data[1][0]))][i][1] == carID:    #もし平均フラグが0なら自車速度の加算をスルー
                         continue
-                    speed_sum = speed_sum + Decimal(str(timeData[int(float(carData[carID][k][0])) - int(float(data[1][0]))][i][3]))       #速度を加算
+                    speed_sum = speed_sum + Decimal(str(timeData[int(float(carData[carID][k][0])) - int(float(data[1][0]))][i][6]))       #速度を加算
                     counter   = counter + 1                         #counter加算。何個足したか数える。
             if counter == 0:
                 #ave_speed = carData[carID][k][6] #Rの範囲内に車両がいなかったら自車速度を代入
@@ -110,7 +110,7 @@ def make_data(csv_name):
     data = []
 
     #CHANGED エンコード utf-8
-    with open(file_pass, 'r', encoding="utf-8", errors="", newline="") as f:
+    with open(file_pass, 'r', encoding="ms932", errors="", newline="") as f:
         #リスト形式
         csv_data1 = csv.reader(f, delimiter=",", doublequote=True, lineterminator="\r\n", quotechar='"', skipinitialspace=True)
 
@@ -126,7 +126,7 @@ def make_data(csv_name):
 
     #========ここから台数と車両IDの最大値を得る============================================
     car_list= [row[1] for row in data]
-    car_list.remove('ID') #ヘッダーも含まれてしまうので削除
+    car_list.remove('車両ID') #ヘッダーも含まれてしまうので削除
     c = set(collections.Counter(car_list)) #重複を削除,IDリストになる
     car_num= len(c) #車の台数
     #print("全車両台数: ",car_num)
@@ -244,7 +244,7 @@ def make_data(csv_name):
             time_array_append(carData[carID][k][0])       #時間の列作成
             ID_array_append(carData[carID][k][1])         #IDの列作成。代入の値はcarIDそのものでもいいかも（処理速度的に）。
             position_array_append(carData[carID][k][2])   #車両位置（前方位置）の列作成
-            car_speed_array_append(carData[carID][k][3])  #速度の列作成
+            car_speed_array_append(carData[carID][k][6])  #速度の列作成
             #car_Type[carID].append(carData[carID][k][17])  #車両Typeの列作成。0=手動,1=閾値を下回ってから自動運転,2=予測結果が閾値を下回ってから自動運転
 
             for n in range(R_total_num):
@@ -317,7 +317,7 @@ def make_data(csv_name):
                     for_csv[i][0] = time[carID][i * time_step]
                     for_csv[i][1] = ID[carID][i * time_step]
                     for_csv[i][2] = position[carID][i * time_step]
-                    for_csv[i][3] = car_speed[carID][i * time_step]
+                    for_csv[i][6] = car_speed[carID][i * time_step]
                     for n in range(R_total_num):
                         for_csv[i][4+n] = avr_speed[carID][n][i * time_step]
 
@@ -348,7 +348,7 @@ def make_data(csv_name):
                 for_csv[i][0] = time[carID][i * time_step]
                 for_csv[i][1] = ID[carID][i * time_step]
                 for_csv[i][2] = position[carID][i * time_step]
-                for_csv[i][3] = car_speed[carID][i * time_step]
+                for_csv[i][6] = car_speed[carID][i * time_step]
                 for n in range(R_total_num):
                     for_csv[i][4+n] = avr_speed[carID][n][i * time_step]
        
