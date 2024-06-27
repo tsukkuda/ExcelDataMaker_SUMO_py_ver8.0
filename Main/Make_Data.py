@@ -1,15 +1,8 @@
 ﻿#コメントアウトしたい箇所のソースを選択状態にして、[Ctrl]+[k] →[c]を押します
 #コメント解除したい箇所のソースを選択状態にして、[Ctrl]+[k] →[u]を押します
-#CHANGED ヘッダーの要素数が異なっていたので，それぞれ対応する番号に書き換えている
-#CHANGED Original : time, ID,前方位置(position?),後方位置,道路ID,車線,speed,加速度,車間,相対速度,,,,,etc
-#CHANGED SUMO : time, ID, position, speed
-#CHANGED つまり要素番号 time:変更なし ID:変更なし positon:変更なし speed:6->3
 
 #==========================Python 3.9で動作確認済み=============================================
 #==========================R6個の場合、車両1台あたり平均2秒でcsvに書き出せる=============================================
-
-from datetime import timedelta
-
 
 def make_data(csv_name):
 
@@ -43,7 +36,7 @@ def make_data(csv_name):
         #R1の基準点はその時の[速度(秒速)×10s]先の位置。そこから前後に100m(任意)がR1の範囲
         ave_speed   = 0
         R_range     = R_RANGE                       #Rの範囲を指定。ページ最上部で設定可能
-        R_point     = Decimal(str(float(carData[carID][k][2]))) + Decimal(str(float(carData[carID][k][3]))) * 15     #Rの基準点を計算
+        R_point     = Decimal(str(float(carData[carID][k][2]))) + Decimal(str(float(carData[carID][k][6]))) * 15     #Rの基準点を計算
         R_start     = R_point-(R_range*R_num)               #Rの範囲の始まり
         R_goal  = R_point + (R_range*R_num)               #Rの範囲の終わり
         if R_start < 0:         #R_startが0より小さければ0に変更。ex.)R_s = -0.7,R_g = 199.7をR_s = 0.0,R_g = 200.0にする。
@@ -68,10 +61,10 @@ def make_data(csv_name):
         
         else:   #車両タイプを抽出して計算する場合
             for i in range(len(timeData[int(float(carData[carID][k][0])) - int(float(data[1][0]))])):  #その瞬間のデータには何両が走っていたか
-                if int(0) == Type_num and R_start <= Decimal(str(timeData[int(float(carData[carID][k][0])) - int(float(data[1][0]))][i][2])) and Decimal(str(timeData[int(float(carData[carID][k][0])) - int(float(data[1][0]))][i][2])) <= R_goal:  #車両がRの範囲内にあるか判別
-                    if ave_flag == 0 and timeData[int(float(carData[carID][k][0])) - int(float(data[1][0]))][i][1] == carID:    #もし平均フラグが0なら自車速度の加算をスルー
+                if int(timeData[int(float(carData[carID][k][0])) - int(float(data[1][0]))][i][17]) == Type_num and R_start <= Decimal(str(timeData[int(float(carData[carID][k][0])) - int(float(data[1][0]))][i][2])) and Decimal(str(timeData[int(float(carData[carID][k][0])) - int(float(data[1][0]))][i][2])) <= R_goal:  #車両がRの範囲内にあるか判別
+                    if ave_flag == 0 and int(timeData[int(float(carData[carID][k][0])) - int(float(data[1][0]))][i][1]) == carID:    #もし平均フラグが0なら自車速度の加算をスルー
                         continue
-                    speed_sum = speed_sum + Decimal(str(timeData[int(float(carData[carID][k][0])) - int(float(data[1][0]))][i][3]))       #速度を加算
+                    speed_sum = speed_sum + Decimal(str(timeData[int(float(carData[carID][k][0])) - int(float(data[1][0]))][i][6]))       #速度を加算
                     counter   = counter + 1                         #counter加算。何個足したか数える。
             if counter == 0:
                 #ave_speed = carData[carID][k][6] #Rの範囲内に車両がいなかったら自車速度を代入
@@ -109,8 +102,7 @@ def make_data(csv_name):
     #読み込んだcsvのデータを保持する配列（生データ）
     data = []
 
-    #CHANGED エンコード utf-8
-    with open(file_pass, 'r', encoding="utf-8", errors="", newline="") as f:
+    with open(file_pass, 'r', encoding="ms932", errors="", newline="") as f:
         #リスト形式
         csv_data1 = csv.reader(f, delimiter=",", doublequote=True, lineterminator="\r\n", quotechar='"', skipinitialspace=True)
 
@@ -125,17 +117,22 @@ def make_data(csv_name):
     #========ここまでcsvのデータ作成================================================
 
     #========ここから台数と車両IDの最大値を得る============================================
-    car_list= [row[1] for row in data]
-    car_list.remove('ID') #ヘッダーも含まれてしまうので削除
-    c = set(collections.Counter(car_list)) #重複を削除,IDリストになる
+    carID_max = -1   #最大車両ID用変数の初期化
+    car_list = [[0] *1  for i in range(0)]
+    car_list_append = car_list.append
+    for i in range(1,len(data)):    #全行の中からIDの最大値を探索
+        if int(data[i][1]) > carID_max:
+            carID_max = int(data[i][1])
+            car_list_append(data[i][1])
+    c = collections.Counter(car_list)
     car_num= len(c) #車の台数
     #print("全車両台数: ",car_num)
     #========ここまで台数と車両IDの最大値を得る============================================
 
     #===================ここから車両IDを0から順に辞書型に登録する=======================
     car_dict = {}
-    for i in c:
-        car_dict[i] = i
+    for i in range(car_num):
+        car_dict[int(car_list[i])] = i
     #===================ここまで車両IDを0から順に辞書型に登録する=======================
 
     #車データを個別に格納する配列を作成
@@ -143,15 +140,13 @@ def make_data(csv_name):
     #numpy配列verは扱い方がわからないから保留
     #carData = np.zeros((carID_max,1,21))
     #IDは0も存在し、0から数えているので配列数は+1必要
-    carData  = {}
-    #記録されてる時間分用意 #*最初の記録と最後の記録の時間差をとっている
-    timeData = [[[0] * 21 for i in range(0)] for j in range(int(float(data[len(data)-1][0]))-int(float(data[1][0]))+1)]
+    carData  = [[[0] * 21 for i in range(0)] for j in range(car_num)]#車の台数分用意
+    timeData = [[[0] * 21 for i in range(0)] for j in range(int(float(data[len(data)-1][0]))-int(float(data[1][0]))+1)]#記録されてる時間分用意
 
     #=========ここから車両ID別データに分類========================================================
     for i in range(1,len(data)):#ヘッダーは除外してインクリメント
         #車両IDを見て、対応する配列に一行ずつ丸々追加
-        #CHANGED IDは辞書型で扱う
-        carData.setdefault(data[i][1], []).append(data[i])
+        carData[car_dict[int(data[i][1])]].append(data[i])
     #=========ここまで車両ID別データに分類========================================================
 
     #=========ここから時間別データに分類========================================================
@@ -166,14 +161,18 @@ def make_data(csv_name):
     #車両IDごとに必要データをすべて先に生成する。全部そろってからIDを指定してcsvファイルに書き出していく。
     #変数を宣言
     #配列は台数分用意
-    time        ={key: [] for key in c}
-    ID          ={key: [] for key in c}
-    position    ={key: [] for key in c}
-    car_speed   ={key: [] for key in c}
-    avr_speed   ={key: [[[0] * 1 for i in range(0)] for j in range(R_total_num)] for key in c}
+    time        =[[[0] * 1 for i in range(0)] for j in range(car_num)]
+    ID          =[[[0] * 1 for i in range(0)] for j in range(car_num)]
+    position    =[[[0] * 1 for i in range(0)] for j in range(car_num)]
+    car_speed   =[[[0] * 1 for i in range(0)] for j in range(car_num)]
+    car_Type    =[[[0] * 1 for i in range(0)] for j in range(car_num)]
+    avr_speed   =[[[[0] * 1 for i in range(0)] for j in range(R_total_num)] for j in range(car_num)]
 
     #===========ここから出力したい車両の分だけ計算させるためにIDだけ先に記録======================================================================-
-    car_Type    ={key: [0] for key in c} #CHANGED どうせ全部0
+    for A in range(car_num):#車両IDインクリメント
+        carID = A
+        for k in range(len(carData[carID])):    #その車両IDのデータの行数分インクリメント
+            car_Type[carID].append(carData[carID][k][17])  #車両Typeの列作成。0=手動,1=閾値を下回ってから自動運転,2=予測結果が閾値を下回ってから自動運転
     #===========ここまで出力したい車両の分だけ計算させるためにIDだけ先に記録======================================================================-
 
     #===========ここから車両Type別に台数をカウント=========================================
@@ -184,7 +183,7 @@ def make_data(csv_name):
     car_Type3 = 0
     car_TypeX = 0
     car_Type_max = 0
-    for A in c:#車両IDインクリメント
+    for A in range(car_num):#車両IDインクリメント
         carID = A
         if car_Type_max < int(car_Type[carID][0]):  #carTypeの最大値を求める。最後にフォルダ作るときに使う。
             car_Type_max = int(car_Type[carID][0])    
@@ -221,7 +220,7 @@ def make_data(csv_name):
 
     #出力数をカウントする変数
     output_num = 0
-    for carID in tqdm(c):#車両IDインクリメント
+    for carID in tqdm(range(car_num)):#車両IDインクリメント
         if Type_num == "ALL":
             pass
         elif int(car_Type[carID][0]) != Type_num: #欲しい車両Typeと一致していなかったら計算をスキップ
@@ -239,12 +238,12 @@ def make_data(csv_name):
         ID_array_append = ID_array.append
         position_array_append = position_array.append
         car_speed_array_append = car_speed_array.append
-
+    
         for k in range(len(carData[carID])):    #その車両IDのデータの行数分インクリメント
             time_array_append(carData[carID][k][0])       #時間の列作成
             ID_array_append(carData[carID][k][1])         #IDの列作成。代入の値はcarIDそのものでもいいかも（処理速度的に）。
             position_array_append(carData[carID][k][2])   #車両位置（前方位置）の列作成
-            car_speed_array_append(carData[carID][k][3])  #速度の列作成
+            car_speed_array_append(carData[carID][k][6])  #速度の列作成
             #car_Type[carID].append(carData[carID][k][17])  #車両Typeの列作成。0=手動,1=閾値を下回ってから自動運転,2=予測結果が閾値を下回ってから自動運転
 
             for n in range(R_total_num):
@@ -309,7 +308,7 @@ def make_data(csv_name):
             path = './result/' + folder_nameR + '/TypeX'
         os.makedirs(path,exist_ok=True)
 
-        for A in c:
+        for A in range(car_num):
             carID = A
             if int(car_Type[carID][0]) == Type_num:
                 for_csv = [[0] * (4+R_total_num) for i in range((len(carData[carID]) + time_step - 1) // time_step)]
