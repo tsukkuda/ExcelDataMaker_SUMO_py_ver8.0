@@ -109,7 +109,6 @@ def make_data(csv_name):
     #読み込んだcsvのデータを保持する配列（生データ）
     data = []
 
-    #CHANGED エンコード utf-8
     with open(file_pass, 'r', encoding="ms932", errors="", newline="") as f:
         #リスト形式
         csv_data1 = csv.reader(f, delimiter=",", doublequote=True, lineterminator="\r\n", quotechar='"', skipinitialspace=True)
@@ -317,7 +316,7 @@ def make_data(csv_name):
                     for_csv[i][0] = time[carID][i * time_step]
                     for_csv[i][1] = ID[carID][i * time_step]
                     for_csv[i][2] = position[carID][i * time_step]
-                    for_csv[i][6] = car_speed[carID][i * time_step]
+                    for_csv[i][3] = car_speed[carID][i * time_step]
                     for n in range(R_total_num):
                         for_csv[i][4+n] = avr_speed[carID][n][i * time_step]
 
@@ -348,7 +347,7 @@ def make_data(csv_name):
                 for_csv[i][0] = time[carID][i * time_step]
                 for_csv[i][1] = ID[carID][i * time_step]
                 for_csv[i][2] = position[carID][i * time_step]
-                for_csv[i][6] = car_speed[carID][i * time_step]
+                for_csv[i][3] = car_speed[carID][i * time_step]
                 for n in range(R_total_num):
                     for_csv[i][4+n] = avr_speed[carID][n][i * time_step]
        
