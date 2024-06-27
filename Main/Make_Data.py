@@ -316,7 +316,7 @@ def make_data(csv_name):
                     for_csv[i][0] = time[carID][i * time_step]
                     for_csv[i][1] = ID[carID][i * time_step]
                     for_csv[i][2] = position[carID][i * time_step]
-                    for_csv[i][6] = car_speed[carID][i * time_step]
+                    for_csv[i][3] = car_speed[carID][i * time_step]
                     for n in range(R_total_num):
                         for_csv[i][4+n] = avr_speed[carID][n][i * time_step]
 
@@ -347,7 +347,7 @@ def make_data(csv_name):
                 for_csv[i][0] = time[carID][i * time_step]
                 for_csv[i][1] = ID[carID][i * time_step]
                 for_csv[i][2] = position[carID][i * time_step]
-                for_csv[i][6] = car_speed[carID][i * time_step]
+                for_csv[i][3] = car_speed[carID][i * time_step]
                 for n in range(R_total_num):
                     for_csv[i][4+n] = avr_speed[carID][n][i * time_step]
        
