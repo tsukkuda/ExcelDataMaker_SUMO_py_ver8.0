@@ -33,6 +33,9 @@ def make_data(csv_name):
     ave_flag        = parameter[3]  #自車速度を平均に含めるかどうか。1なら含める。0なら含めない。
     time_step       = parameter[4]  #出力するデータの時間の間隔
     sampling_step   = parameter[5]  #サンプリング間隔
+    
+    #! 基準点は時速*CENTERとなる
+    CENTER          = 30
 
 
 
@@ -43,7 +46,7 @@ def make_data(csv_name):
         #R1の基準点はその時の[速度(秒速)×10s]先の位置。そこから前後に100m(任意)がR1の範囲
         ave_speed   = 0
         R_range     = R_RANGE                       #Rの範囲を指定。ページ最上部で設定可能
-        R_point     = Decimal(str(float(carData[carID][k][2]))) + Decimal(str(float(carData[carID][k][6]))) * 15     #Rの基準点を計算
+        R_point     = Decimal(str(float(carData[carID][k][2]))) + Decimal(str(float(carData[carID][k][6]))) * CENTER     #Rの基準点を計算
         R_start     = R_point-(R_range*R_num)               #Rの範囲の始まり
         R_goal  = R_point + (R_range*R_num)               #Rの範囲の終わり
         if R_start < 0:         #R_startが0より小さければ0に変更。ex.)R_s = -0.7,R_g = 199.7をR_s = 0.0,R_g = 200.0にする。
