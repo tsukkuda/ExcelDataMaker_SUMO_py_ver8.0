@@ -35,7 +35,7 @@ def make_data(csv_name):
     sampling_step   = parameter[5]  #サンプリング間隔
     
     #! 基準点は時速*CENTERとなる
-    CENTER          = 15
+    CENTER          = 40
 
 
 
